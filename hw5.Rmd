@@ -1,0 +1,54 @@
+---
+title: "homework5"
+author: "Sam Shifflett"
+date: "4/9/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+3.a)
+```{r}
+library("tidyverse")
+url <- "https://xdaiisu.github.io/ds202materials/data/ames.csv"
+data <- readr::read_csv(url)
+head(data[,"Store Location"])
+data <- separate(data, col="Store Location",into = c("Street Address","Lat","Lon"), sep="([\\(\\,\\)])")
+data <- separate(data, col="Invoice/Item Number", into = c("INV","Item Number"), sep = "-")
+head(data)
+```
+
+
+
+3.b)
+```{r}
+sapply(data,class)
+#lat,lon,vendornumber,city(factor),vendorname(factor)
+data[,c("Lat","Lon","Vendor Number", "Item Number")] = sapply(data[,c("Lat","Lon","Vendor Number", "Item Number")], as.numeric)
+data[,c("City","Vendor Name")] = sapply(data[,c("City","Vendor Name")], as.factor)
+head(data)
+```
+
+3.c)
+```{r}
+data = separate(data=data,col=Date,into=c("Month","Day","Year"),sep="\\/")
+data[,c("Month","Day","Year")] = sapply(data[,c("Month","Day","Year")],as.numeric)
+head(data)
+```
+4.a)
+```{r}
+library(ggplot2)
+ggplot(data, aes(x=Lat,y=Lon)) + geom_point() + ylim(-93.5,-93.8)
+```
+
+4.b)
+```{r}
+head(data)
+data2 <- unique(sort(data[["Category Name"]]))
+data1 <- group_by(data,"Category Name")
+names(data1) <- make.names(names(data1))
+unique(data1$Category.Name)
+ggplot(data = data1, aes(x=Category.Name,y=Volume.Sold..Liters.)) + geom_boxplot()
+```
