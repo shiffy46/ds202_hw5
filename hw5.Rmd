@@ -14,7 +14,6 @@ knitr::opts_chunk$set(echo = TRUE)
 library("tidyverse")
 url <- "https://xdaiisu.github.io/ds202materials/data/ames.csv"
 data <- readr::read_csv(url)
-head(data[,"Store Location"])
 data <- separate(data, col="Store Location",into = c("Street Address","Lat","Lon"), sep="([\\(\\,\\)])")
 data <- separate(data, col="Invoice/Item Number", into = c("INV","Item Number"), sep = "-")
 head(data)
@@ -28,7 +27,6 @@ sapply(data,class)
 #lat,lon,vendornumber,city(factor),vendorname(factor)
 data[,c("Lat","Lon","Vendor Number", "Item Number")] = sapply(data[,c("Lat","Lon","Vendor Number", "Item Number")], as.numeric)
 data[,c("City","Vendor Name")] = sapply(data[,c("City","Vendor Name")], as.factor)
-head(data)
 ```
 
 3.c)
@@ -45,10 +43,54 @@ ggplot(data, aes(x=Lat,y=Lon)) + geom_point() + ylim(-93.5,-93.8)
 
 4.b)
 ```{r}
-head(data)
-data2 <- unique(sort(data[["Category Name"]]))
-data1 <- group_by(data,"Category Name")
-names(data1) <- make.names(names(data1))
-unique(data1$Category.Name)
-ggplot(data = data1, aes(x=Category.Name,y=Volume.Sold..Liters.)) + geom_boxplot()
+library(gridExtra)
+names(data) <- make.names(names(data))
+data <- transform(data, Category.Name=as.factor(Category.Name), group=as.factor(findInterval(Category.Name, c(1,20,40,60,80,100,124))))
+data <- transform(data, Category.Name=as.factor(Category.Name), group=as.factor(findInterval(Category.Name, c(1,20,40,60,80,100,124))))
+g1 = ggplot(subset(data,data$group==1), aes(Category.Name,y=Volume.Sold..Liters.)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+g2 = ggplot(subset(data,data$group==2), aes(Category.Name,y=Volume.Sold..Liters.)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+g3 = ggplot(subset(data,data$group==3), aes(Category.Name,y=Volume.Sold..Liters.)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+g4 = ggplot(subset(data,data$group==4), aes(Category.Name,y=Volume.Sold..Liters.)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+g5 = ggplot(subset(data,data$group==5), aes(Category.Name,y=Volume.Sold..Liters.)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+g6 = ggplot(subset(data,data$group==6), aes(Category.Name,y=Volume.Sold..Liters.)) + geom_boxplot() + theme(axis.text.x = element_text(angle = 90, hjust = 1, size = 8))
+#grid.arrange(g1,g2,g3,g4,g5,g6,g7,ncol=2,nrow=4)
+g1
+g2
+g3
+g4
+g5
+g6
 ```
+
+
+```{r}
+filterdata = filter(data, Year == 2018 & City == "Ames")
+names(filterdata) <- make.names(names(filterdata))
+sumdaydata = filterdata %>% group_by(Month,Day) %>% summarize(Sales=sum(Sale..Dollars.))
+ggplot(sumdaydata, aes(x=Day,y=Sales, color=Month)) + geom_point() + facet_wrap(sumdaydata$Month)
+#Game Dates
+#SEP 1 (SAT)
+#SEP 8 (SAT)
+#SEP 15 (SAT)
+#SEP 22 (SAT) 
+#SEP 29 (SAT)
+#OCT 6 (SAT)
+#OCT 13 (SAT)
+#OCT 27 (SAT)
+#NOV 3 (SAT)
+#NOV 10 (SAT)
+#NOV 17 (SAT)
+#NOV 24 (SAT)
+#DEC 1 (SAT) 
+#DEC 28 (FRI)
+```
+
+
+
+```{r}
+sumdaydataVolume = filterdata %>% group_by(Month,Day) %>% summarize(Volume.Sold=sum(Volume.Sold..Liters.))
+ggplot(sumdaydataVolume, aes(x=Day,y=Volume.Sold, color=Month)) + geom_line() + facet_wrap(sumdaydata$Month)
+```
+
+
+By observing the two plots, it is easy to see that every Friday/Saturday liqour sales increase dramatically. Even during the dates of the football games, there seems to be a standard increase in sales and volume sold. I thought there would be more of a drastic increase during games, but that doesn't seem to be the case. I guess that the lure of a football game doesn't bring that drastric of an increase in sales to the liqour market here in ames. I have a feeling that this is because the people who travel here to see the games buy their alcohol elsewhere before arriving.
